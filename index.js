@@ -1,15 +1,11 @@
 import pg from 'pg'
-const { Pool } = pg
 import express from 'express'
-const app = express()
+import conn from './dbconnect.js'
 
-//connect to db
-const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    database: 'andrewlogemann'
-})
+//initialize app/db
+const app = express()
+const { Pool } = pg
+const pool = new Pool(conn)
 
 //app config
 app.use(express.static('public'))
@@ -17,12 +13,16 @@ app.set('view engine','ejs')
 app.use(express.urlencoded({ extended: true }));
 
 //routes
-app.get('/', (req,res) => {
-    res.render('home')
+app.get('/', async (req,res) => {
+    const result = await pool.query('select * from meals')
+    const { rows } = result
+    res.render('home', rows)
 })
 
-app.post('/', (req,res) => {
-    console.log('post!')
+app.post('/', async (req,res) => {
+    const { name,description,calories } = req.body
+    const result = await pool.query('insert into meals (name, description, calories) values ($1,$2,$3)',[name, description, calories])
+    console.log(result)
     res.redirect('/')
 })
 
