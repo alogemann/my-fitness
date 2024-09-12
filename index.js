@@ -20,9 +20,8 @@ app.get('/', async (req,res) => {
 })
 
 app.post('/', async (req,res) => {
-    const { name,description,calories } = req.body
-    const result = await pool.query('insert into meals (name, description, calories) values ($1,$2,$3)',[name, description, calories])
-    console.log(result)
+    const { type,description,calories } = req.body
+    const result = await pool.query('insert into meals (type, description, calories) values ($1,$2,$3)',[type, description, calories])
     res.redirect('/')
 })
 
