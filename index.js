@@ -1,6 +1,8 @@
 import pg from 'pg'
 import express from 'express'
+import fs from 'fs'
 import conn from './dbconnect.js'
+import q from './queries.js'
 
 //initialize app/db
 const app = express()
@@ -14,9 +16,26 @@ app.use(express.urlencoded({ extended: true }));
 
 //routes
 app.get('/', async (req,res) => {
-    const result = await pool.query('select * from meals')
-    const { rows } = result
-    res.render('home', rows)
+    const hoy = await pool.query(q.hoy)
+    const ayer = await pool.query(q.ayer)
+    const totals = await pool.query(q.totals)
+    const hoyData = hoy.rows
+    const ayerData = ayer.rows
+    const totData = {
+        day_0: totals.rows[0],
+        day_1: totals.rows[1]
+    }
+    //send data to client for use with D3
+    fs.writeFile('public/data.json',JSON.stringify(totData), (err) => {
+        if (err)
+            console.log(err);
+        else {
+            console.log("File written successfully");
+            console.log("The written has the following contents:");
+            console.log(fs.readFileSync("public/data.json", "utf8"));
+        }
+    }) //to be tested
+    res.render('home', {hoyData, ayerData})
 })
 
 app.post('/', async (req,res) => {
